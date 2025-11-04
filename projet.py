@@ -66,10 +66,9 @@ def heuristique_manhattan(etat):
         for j in range(3):
             valeur = etat[i][j]
             if valeur != 0:
-                # Position finale de la tuile (valeur-1)
-                goal_i = (valeur - 1) // 3
-                goal_j = (valeur - 1) % 3
-                distance += abs(i - goal_i) + abs(j - goal_j)
+                objectif_i = (valeur - 1) // 3
+                objectif_j = (valeur - 1) % 3
+                distance += abs(i - objectif_i) + abs(j - objectif_j)
     return distance
 
 def afficher_taquin(etat):
