@@ -1,4 +1,5 @@
 from heapq import heappush, heappop
+import numpy as np; 
 
 # --- Configuration du taquin ---
 ETAT_OBJECTIF = (
@@ -58,6 +59,18 @@ def heuristique(etat):
                 mal_places += 1
     return mal_places
 
+def heuristique_manhattan(etat):
+    """Heuristique : somme des distances de Manhattan entre chaque tuile et sa position finale."""
+    distance = 0
+    for i in range(3):
+        for j in range(3):
+            valeur = etat[i][j]
+            if valeur != 0:
+                # Position finale de la tuile (valeur-1)
+                goal_i = (valeur - 1) // 3
+                goal_j = (valeur - 1) % 3
+                distance += abs(i - goal_i) + abs(j - goal_j)
+    return distance
 
 def afficher_taquin(etat):
     """Affiche joliment un état du taquin."""
@@ -71,7 +84,7 @@ def afficher_taquin(etat):
 
 def a_etoile(initial):
     open_set = []
-    heappush(open_set, (heuristique(initial), 0, initial, []))
+    heappush(open_set, (heuristique_manhattan(initial), 0, initial, []))
     visited = set()
 
     while open_set:
@@ -88,7 +101,7 @@ def a_etoile(initial):
         for move, next_state in deplacements_possibles(etat):
             if next_state not in visited:
                 new_g = g + 1
-                h = heuristique(next_state)
+                h = heuristique_manhattan(next_state)
                 heappush(open_set, (new_g + h, new_g, next_state, chemin + [(move, next_state)]))
 
     return None, None, 0, len(visited)
@@ -108,7 +121,7 @@ def main():
         afficher_taquin(etat_courant)
 
         for move, etat_suivant in chemin:
-            print(f"Coup : {move} (heuristique = {heuristique(etat_suivant)})")
+            print(f"Coup : {move} (heuristique = {heuristique_manhattan(etat_suivant)})")
             afficher_taquin(etat_suivant)
             etat_courant = etat_suivant
 
