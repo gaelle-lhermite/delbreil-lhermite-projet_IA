@@ -1,5 +1,4 @@
 from heapq import heappush, heappop
-import numpy as np; 
 
 # --- Configuration du taquin ---
 ETAT_OBJECTIF = (
@@ -71,6 +70,44 @@ def heuristique_manhattan(etat):
                 distance += abs(i - objectif_i) + abs(j - objectif_j)
     return distance
 
+def heuristique_conflits_lineaires(etat):
+    """Heuristique de Manhattan + conflits linéaires (admissible)."""
+    manhattan = 0
+    conflits = 0
+    N = 3  # taille du taquin
+
+    # --- Distance de Manhattan ---
+    for i in range(N):
+        for j in range(N):
+            valeur = etat[i][j]
+            if valeur != 0:
+                objectif_i = (valeur - 1) // N
+                objectif_j = (valeur - 1) % N
+                manhattan += abs(i - objectif_i) + abs(j - objectif_j)
+
+    # --- Conflits linéaires (lignes) ---
+    for i in range(N):
+        for j in range(N):
+            valeur1 = etat[i][j]
+            if valeur1 != 0 and (valeur1 - 1) // N == i:  # tuile à sa bonne ligne
+                for k in range(j + 1, N):
+                    valeur2 = etat[i][k]
+                    if valeur2 != 0 and (valeur2 - 1) // N == i and valeur1 > valeur2:
+                        conflits += 1
+
+    # --- Conflits linéaires (colonnes) ---
+    for j in range(N):
+        for i in range(N):
+            valeur1 = etat[i][j]
+            if valeur1 != 0 and (valeur1 - 1) % N == j:  # tuile à sa bonne colonne
+                for k in range(i + 1, N):
+                    valeur2 = etat[k][j]
+                    if valeur2 != 0 and (valeur2 - 1) % N == j and valeur1 > valeur2:
+                        conflits += 1
+
+    return manhattan + 2 * conflits
+
+
 def afficher_taquin(etat):
     """Affiche joliment un état du taquin."""
     for i in range(3):
@@ -81,9 +118,9 @@ def afficher_taquin(etat):
 
 # --- Algorithme A* ---
 
-def a_etoile(initial):
+def a_etoile(initial, heuristique_fonction):
     open_set = []
-    heappush(open_set, (heuristique_manhattan(initial), 0, initial, []))
+    heappush(open_set, (heuristique_fonction(initial), 0, initial, []))
     visited = set()
 
     while open_set:
@@ -100,7 +137,7 @@ def a_etoile(initial):
         for move, next_state in deplacements_possibles(etat):
             if next_state not in visited:
                 new_g = g + 1
-                h = heuristique_manhattan(next_state)
+                h = heuristique_fonction(next_state)
                 heappush(open_set, (new_g + h, new_g, next_state, chemin + [(move, next_state)]))
 
     return None, None, 0, len(visited)
@@ -110,7 +147,7 @@ def main():
     initial = lire_taquin()
     print("\nRésolution en cours...\n")
 
-    chemin, final, taille_open, taille_visited = a_etoile(initial)
+    chemin, final, taille_open, taille_visited = a_etoile(initial,heuristique_conflits_lineaires)
 
     if chemin is None:
         print("Aucune solution trouvée.")
